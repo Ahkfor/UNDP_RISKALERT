@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def line_bar_plot(x, y, title, x_label=None, y_label=None, save_path=None):
+def line_bar_plot(x, y, title, x_label=None, y_label=None, save_path=None, unit=None):
     '''
 
     :param x: x-axis data
@@ -12,6 +12,9 @@ def line_bar_plot(x, y, title, x_label=None, y_label=None, save_path=None):
     :param y_label: string
     :return:
     '''
+    if unit == 'billion':
+        y = [i/10**9 for i in y]
+
     # Create the plot
     plt.figure(figsize=(10, 6))
 

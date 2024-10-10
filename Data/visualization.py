@@ -1,4 +1,3 @@
-from HAPI.hapi_class import HapiClass
 import visual_helper
 import pandas as pd
 
@@ -59,4 +58,24 @@ def plot_conflict_events(country_data, event_type='all'):
         x = casualties_per_year['year']
         y = casualties_per_year['fatalities']
         visual_helper.line_bar_plot(x, y, title='Conflict Events Fatalities Trend', y_label='Fatalities Count')
+
+
+def plot_funding(country_data):
+    """
+    Plots the funding trend
+    """
+    if not country_data.funding_data:
+        country_data.get_funding_data()
+    df = country_data.funding_data
+
+    # Add a column of year
+    df['reference_period_start'] = pd.to_datetime(df['reference_period_start'])
+    df['year'] = df['reference_period_start'].dt.year
+
+    # Plot a bar and line plot, where x-axis is year, and y-axis is funding received
+    funding_per_year = df.groupby('year')['funding_usd'].sum().reset_index()
+    x = funding_per_year['year']
+    y = funding_per_year['funding_usd']
+    visual_helper.line_bar_plot(x, y, title='Funding Trend', y_label='Amount (billion USD)', unit='billion')
+
 
