@@ -1,6 +1,7 @@
 from transformers import AutoTokenizer, AutoModelForMaskedLM
 import torch
 import re
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 
 def clean_text(text):
@@ -27,49 +28,70 @@ def clean_text(text):
 
     # Join the filtered words back into a single string
     # cleaned_text = ' '.join(filtered_words)
-
     return text
 
 
-def text_summary(text, max_len=514):
+# def text_summary(text, max_len=514):
+#     """
+#     Function to summarize humanitarian text using HumBert
+#     :param text: text to be summarized
+#     """
+#     # Load the tokenizer and model
+#     text = clean_text(text)  # Assuming clean_text is your custom text preprocessing function
+#     tokenizer = AutoTokenizer.from_pretrained('nlp-thedeep/humbert')
+#     model = AutoModelForMaskedLM.from_pretrained("nlp-thedeep/humbert")
+#
+#     # Tokenize the text and return input_ids and attention_mask
+#     tokens = tokenizer(text, return_tensors='pt', truncation=True, padding=True)
+#
+#     # Split the input_ids and attention_mask
+#     input_ids = tokens['input_ids'][0]
+#     attention_mask = tokens['attention_mask'][0]
+#
+#     # Split into chunks of max_len
+#     input_splits = [input_ids[i:i + max_len] for i in range(0, len(input_ids), max_len)]
+#     mask_splits = [attention_mask[i:i + max_len] for i in range(0, len(attention_mask), max_len)]
+#
+#     predicted_text_li = []
+#
+#     for input_ids_chunk, mask_chunk in zip(input_splits, mask_splits):
+#         # Create new dictionary with input_ids and attention_mask
+#         encoded_input = {'input_ids': input_ids_chunk.unsqueeze(0), 'attention_mask': mask_chunk.unsqueeze(0)}
+#
+#         # Get model output
+#         output = model(**encoded_input)
+#
+#         # Get the predicted token IDs
+#         predicted_token_ids = torch.argmax(output.logits, dim=-1)
+#
+#         # Convert predicted token IDs to tokens and decode them into text
+#         predicted_text = tokenizer.decode(predicted_token_ids[0], skip_special_tokens=True)
+#         predicted_text_li.append(predicted_text)
+#
+#     # Return the predicted text as a concatenated string or list
+#     return ' '.join(predicted_text_li)
+
+
+
+def text_summary(text, max_len=150):
     """
-    Function to summarize humanitarian text using HumBert
+    Function to summarize humanitarian text using a summarization model (BART in this case)
     :param text: text to be summarized
+    :param max_len: maximum length of the summary (in tokens)
     """
     # Load the tokenizer and model
-    text = clean_text(text)  # Assuming clean_text is your custom text preprocessing function
-    tokenizer = AutoTokenizer.from_pretrained('nlp-thedeep/humbert')
-    model = AutoModelForMaskedLM.from_pretrained("nlp-thedeep/humbert")
+    tokenizer = AutoTokenizer.from_pretrained('facebook/bart-large-cnn')
+    model = AutoModelForSeq2SeqLM.from_pretrained('facebook/bart-large-cnn')
 
-    # Tokenize the text and return input_ids and attention_mask
-    tokens = tokenizer(text, return_tensors='pt', truncation=True, padding=True)
+    # Tokenize the text
+    inputs = tokenizer(text, return_tensors='pt', truncation=True, padding=True, max_length=1024)
 
-    # Split the input_ids and attention_mask
-    input_ids = tokens['input_ids'][0]
-    attention_mask = tokens['attention_mask'][0]
+    # Generate summary
+    summary_ids = model.generate(inputs['input_ids'], max_length=max_len, min_length=30, length_penalty=2.0, num_beams=4, early_stopping=True)
 
-    # Split into chunks of max_len
-    input_splits = [input_ids[i:i + max_len] for i in range(0, len(input_ids), max_len)]
-    mask_splits = [attention_mask[i:i + max_len] for i in range(0, len(attention_mask), max_len)]
-
-    predicted_text_li = []
-
-    for input_ids_chunk, mask_chunk in zip(input_splits, mask_splits):
-        # Create new dictionary with input_ids and attention_mask
-        encoded_input = {'input_ids': input_ids_chunk.unsqueeze(0), 'attention_mask': mask_chunk.unsqueeze(0)}
-
-        # Get model output
-        output = model(**encoded_input)
-
-        # Get the predicted token IDs
-        predicted_token_ids = torch.argmax(output.logits, dim=-1)
-
-        # Convert predicted token IDs to tokens and decode them into text
-        predicted_text = tokenizer.decode(predicted_token_ids[0], skip_special_tokens=True)
-        predicted_text_li.append(predicted_text)
-
-    # Return the predicted text as a concatenated string or list
-    return ' '.join(predicted_text_li)
+    # Decode summary and return it
+    summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+    return summary
 
 
 # Example
@@ -77,9 +99,6 @@ with open('Sample.txt', 'r', encoding='utf-8') as file:
     # Read the file's content
     content = file.read()
 
-
 summary = text_summary(content)
-print(summary)
-summary = text_summary(summary)
 with open('summary.txt', 'w', encoding='utf-8') as file:
     file.write(summary)
