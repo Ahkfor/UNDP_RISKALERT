@@ -27,7 +27,7 @@ def fetch_data(base_url, limit=1000):
             if idx == 0:
                 results = csv_response
             else:
-                results.append(csv_response)
+                results = pd.concat([results,csv_response])
 
             # If the returned results are less than the limit,
             # it's the last page
