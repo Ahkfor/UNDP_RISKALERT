@@ -77,5 +77,66 @@ def plot_funding(country_data):
     funding_per_year = df.groupby('year')['funding_usd'].sum().reset_index()
     x = funding_per_year['year']
     y = funding_per_year['funding_usd']
-    plot = visual_helper.line_bar_plot(x, y, title='Funding Trend', y_label='Amount (billion USD)', unit='billion')
+    plot = visual_helper.line_bar_plot(x, y, title='Funding Trend', y_label='Amount (billion USD)', unit='billion',save_path='./funding')
+    return plot
+
+def plot_population(country_data):
+    if not country_data.population_data:
+        country_data.get_population_data()
+    df = country_data.population_data
+        # 合并 age_range 中的高龄段
+    df = df[df['age_range'] !='all']
+    
+    def merge_age_range(age):
+        try:
+            if age == '80+':
+                return '60+'
+            start_age = int(age.split('-')[0])
+            if start_age >= 60 :
+                return '60+'
+            else:
+                return age
+        except ValueError:
+            return age
+
+    df.loc[:, 'age_range'] = df['age_range'].apply(merge_age_range)
+    # print(df.columns)
+    
+    aggregated_data = df.groupby('age_range', as_index=False)['population'].sum()
+    # print(aggregated_data)
+
+    data = aggregated_data['population'].values 
+    labels = aggregated_data['age_range'].values
+
+    plot = visual_helper.pie_chart(data, labels, title='Population age range in AFG',save_path='./population')
+    return plot
+
+def plot_events(country_data):
+    """
+    Process data for bar chart.
+
+    :param country_data: DataFrame containing the data
+    :return: processed x and y data for plotting
+    """
+    # Optional data filtering based on condition
+    if not country_data.conflict_event_data:
+        country_data.get_conflict_event_data()
+    df = country_data.conflict_event_data
+
+    df['reference_period_start'] = pd.to_datetime(df['reference_period_start'])
+    df['year'] = df['reference_period_start'].dt.year
+    
+    # Group by 'year' and 'admin1_name' and sum the 'events'
+    aggregated_data = df.groupby(['year', 'admin1_name'])['events'].sum().unstack(fill_value=0)
+
+    # Call bar_chart for visualization
+    plot = visual_helper.bar_chart(aggregated_data, 
+                     title="Conflict Events Over Years in AFG", 
+                     x_label="Year", 
+                     y_label="Number of Events", 
+                     save_path='./conflict_events2', 
+                     color='skyblue', 
+                     alpha=0.7, 
+                     stacked=False)
+    
     return plot

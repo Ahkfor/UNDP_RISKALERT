@@ -118,8 +118,6 @@ class HapiClass:
                                 'admin2_ref',
                                 'admin1_code',
                                 'admin2_code',
-                                'admin1_name',
-                                'admin2_name',
                                 'resource_hdx_id'], axis=1)
 
         self.conflict_event_data = results

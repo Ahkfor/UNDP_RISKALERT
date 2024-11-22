@@ -2,7 +2,7 @@ from urllib import request
 import pandas as pd
 
 
-def fetch_data(base_url, limit=1000):
+def fetch_data(base_url,limit=1000):
     """
     Fetch data from the provided base_url with pagination support.
 
@@ -34,6 +34,9 @@ def fetch_data(base_url, limit=1000):
             if len(csv_response) < limit:
                 break
 
+            if idx > 10:
+                break
+
         idx += 1
 
     return results
@@ -51,6 +54,22 @@ def construct_url(APP_IDENTIFIER, THEME, LOCATION):
         f"https://hapi.humdata.org/api/v1/{THEME}?"
         f"output_format=csv"
         f"&location_code={LOCATION}"
+        f"&app_identifier={APP_IDENTIFIER}"
+    )
+    return BASE_URL
+
+
+def construct_url_all(APP_IDENTIFIER, THEME):
+    '''
+    Construct an url for data requests
+    :param APP_IDENTIFIER: string
+    :param THEME: string
+    :param LOCATION: string
+    :return: constructed url as string
+    '''
+    BASE_URL = (
+        f"https://hapi.humdata.org/api/v1/{THEME}?"
+        f"output_format=csv"
         f"&app_identifier={APP_IDENTIFIER}"
     )
     return BASE_URL
