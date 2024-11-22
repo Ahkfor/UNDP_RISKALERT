@@ -13,4 +13,4 @@ plots = [plot3]
 title = "AFG Humanitarian Crisis"
 description = "asidjgviasnvboawh4ugaopjsj gapisjdgoiahsiohga[osdhiuno saoifhopeuhgiuadfiovuoziuhdcv aspodaouipshvu"
 
-cg.create_card(plots, title, description)
+# cg.create_card(plots, title, description)
