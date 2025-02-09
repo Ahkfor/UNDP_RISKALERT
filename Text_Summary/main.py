@@ -1,5 +1,5 @@
 from pathlib import Path
-from text_summary import *----------
+from text_summary import *
 
 # Define the folder path
 folder_path = Path("ukraine_filtered_reports")
@@ -11,5 +11,6 @@ documents = [Path(file).read_text(encoding="utf-8") for file in folder_path.glob
 for i in documents:
     print(len(i))
 
-tfidf_summary(documents, "war")
-print(bart_summary(documents))
+summarizer = DocumentSummarizer(documents)
+print(summarizer.tfidf_summary("war"))
+print(summarizer.bart_summary())
