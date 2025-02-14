@@ -1,12 +1,16 @@
 from Data.HAPI.hapi_class import HapiClass
 import Data.Visualization.visualization as visual
 import Card_Generation.card_generation as cg
+from Data.RELIEFWEB.reliefweb_class import ReliefWebClass
+from Card_Generation.HAPI_recommender import HAPIRecommender
+from Text_Summary.text_summary import DocumentSummarizer
 
 
 # Example
 
 # Initialize country
-country = "AFG"
+country = "UKR"
+date_range = ("2022-02-24", "2022-05-24")
 
 # country_data = HapiClass(country)
 # plot1 = visual.plot_humanitarian_needs(country_data)
@@ -14,4 +18,17 @@ country = "AFG"
 # plot3 = visual.plot_funding(country_data)
 # plots = [plot3]
 
-# Assume we find a list of documents from 
+# Find documents
+reliefweb_articles = ReliefWebClass(country, date_range).get_articles()[:10]
+print("Get documents complete")
+
+# Summarize
+summary = DocumentSummarizer(reliefweb_articles).deepseek_summary()
+
+print(summary)
+
+# Recommend Graphs
+recommended = HAPIRecommender(summary).generate_recommendation()
+
+print(recommended)
+

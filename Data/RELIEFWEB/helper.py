@@ -22,7 +22,7 @@ def fetch_data(base_url):
     return df
 
 
-def construct_url(APP_IDENTIFIER, THEME, LIMIT, country=None):
+def construct_url(APP_IDENTIFIER, THEME, LIMIT, country=None, date_range=None):
     '''
     Construct an url for data requests
     :param APP_IDENTIFIER: string
@@ -30,19 +30,20 @@ def construct_url(APP_IDENTIFIER, THEME, LIMIT, country=None):
     :param LOCATION: string
     :return: constructed url as string
     '''
+    BASE_URL = (
+            f"https://api.reliefweb.int/v1/{THEME}?"
+            f"appname={APP_IDENTIFIER}"
+            f"&limit={LIMIT}"
+        )
+    
     if country:
-        BASE_URL = (
-            f"https://api.reliefweb.int/v1/{THEME}?"
-            f"appname={APP_IDENTIFIER}"
-            f"&query[fields][]=country&query[value]={country}"
-            f"&limit={LIMIT}"
-        )
-    else:
-        BASE_URL = (
-            f"https://api.reliefweb.int/v1/{THEME}?"
-            f"appname={APP_IDENTIFIER}"
-            f"&limit={LIMIT}"
-        )
+        query_country = f"&query[fields][]=country&query[value]={country}"
+        BASE_URL = BASE_URL + query_country
+        
+    if isinstance(date_range, dict) and "from" in date_range and "to" in date_range:
+        query_date = f"&filter[field]=date.created&filter[value][from]={date_range['from']}T00:00:00%2B00:00&filter[value][to]={date_range['to']}T23:59:59%2B00:00"
+        BASE_URL = BASE_URL + query_date
+        
     return BASE_URL
 
 

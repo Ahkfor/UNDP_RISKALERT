@@ -1,7 +1,7 @@
-from transformers import AutoTokenizer, AutoModelForMaskedLM
 import torch
 import re
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, GenerationConfig
+from transformers import pipeline
 
 
 def clean_text(text):
@@ -77,7 +77,45 @@ def text_summary_pegasus(text, max_len=150):
     summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
     return summary
 
+def text_summary_deepseek(text, max_len=150):
+    model_name = "deepseek-ai/deepseek-llm-7b-chat"
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.bfloat16, device_map="auto")
+    model.generation_config = GenerationConfig.from_pretrained(model_name)
+    model.generation_config.pad_token_id = model.generation_config.eos_token_id
 
+    messages = [
+        {"role": "user", 
+         "content": "Please help me summarize the article and keep key time and place in your summary:"+text}
+    ]
+    input_tensor = tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt")
+    outputs = model.generate(input_tensor.to(model.device), max_new_tokens=max_len)
+
+    result = tokenizer.decode(outputs[0][input_tensor.shape[1]:], skip_special_tokens=True)
+    return result
+
+def text_summary_llama(text, max_len = 150):
+    model_id = "meta-llama/Meta-Llama-3.1-8B-Instruct"
+
+    pipe1 = pipeline(
+        "text-generation",
+        model=model_id,
+        model_kwargs={"torch_dtype": torch.bfloat16},
+        device_map="auto",
+    )
+
+    messages = [
+        {"role": "system", "content": "You are a professional chatbot who writes reports about national events."},
+        {"role": "user", "content": "Please summarize the text and ensure your summary contains 'what, when, where, why, which and how' : "+text},
+    ]
+
+    outputs = pipe1(
+        messages,
+        max_new_tokens=max_len,
+    )
+
+    result = outputs[0]["generated_text"][-1]
+    return result.get('content')
 
 # def text_summary_bert(text, max_len=150):
 #     """
@@ -129,6 +167,3 @@ def text_summary_pegasus(text, max_len=150):
 #     summary = ' '.join(summary_sentences)
 #     return summary
 #
-
-
-

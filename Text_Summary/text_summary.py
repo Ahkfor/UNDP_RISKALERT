@@ -4,7 +4,8 @@ from rank_bm25 import BM25Okapi
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.text_rank import TextRankSummarizer
-from helper import *
+from .helper import *
+import concurrent.futures
 
 
 class DocumentSummarizer:
@@ -21,7 +22,6 @@ class DocumentSummarizer:
         """
         self.documents = document_li
         self.summary = None
-        pass
 
     def bart_summary(self):
     # Method 1: summarize each document using BART, then use other methods to summarize these outputs
@@ -80,11 +80,27 @@ class DocumentSummarizer:
     def preprocess(self):
         pass
     
-    def llm_summarizer(self):
-        """
-        Change method name if necessary
-        """  
-        pass
+    def deepseek_summary(self):
+        summary = ''
+        
+        # Step 1: Use ThreadPoolExecutor to process documents in parallel
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            summaries = list(executor.map(lambda doc: text_summary_bart(doc, max_len=300), self.documents))
+        
+        # Step 2: Combine summaries
+        summary = ''.join(summaries)
 
+        # Step 3: Run the final deepseek summary
+        result = text_summary_deepseek(summary, max_len=500)
+
+        return result
+
+    def llama_summary(self):
+        summary = ''
+
+        for doc in self.documents:
+            summary = summary + text_summary_bart(doc, max_len=300)
+        result = text_summary_llama(summary, max_len=500)
+        return result
 
         

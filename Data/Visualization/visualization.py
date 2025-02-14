@@ -84,7 +84,7 @@ def plot_population(country_data):
     if not country_data.population_data:
         country_data.get_population_data()
     df = country_data.population_data
-        # 合并 age_range 中的高龄段
+
     df = df[df['age_range'] !='all']
     
     def merge_age_range(age):
