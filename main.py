@@ -10,7 +10,7 @@ from Text_Summary.text_summary import DocumentSummarizer
 
 # Initialize country
 country = "UKR"
-date_range = ("2022-02-24", "2022-05-24")
+date_range = ("2022-02-24", "2022-03-24")
 
 # country_data = HapiClass(country)
 # plot1 = visual.plot_humanitarian_needs(country_data)

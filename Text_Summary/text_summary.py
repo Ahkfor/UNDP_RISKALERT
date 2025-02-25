@@ -89,6 +89,7 @@ class DocumentSummarizer:
         
         # Step 2: Combine summaries
         summary = ''.join(summaries)
+        print(summary)
 
         # Step 3: Run the final deepseek summary
         result = text_summary_deepseek(summary, max_len=500)
