@@ -23,7 +23,7 @@ reliefweb_articles = ReliefWebClass(country, date_range).get_articles()[:10]
 print("Get documents complete")
 
 # Summarize
-summary = DocumentSummarizer(reliefweb_articles).deepseek_summary()
+summary = DocumentSummarizer(reliefweb_articles).llama_summary()
 
 print(summary)
 

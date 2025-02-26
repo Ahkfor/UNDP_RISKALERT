@@ -106,7 +106,7 @@ def text_summary_llama(text, max_len = 150):
 
     messages = [
         {"role": "system", "content": "You are a professional chatbot who writes reports about national events."},
-        {"role": "user", "content": "Please summarize the text and ensure your summary contains 'what, when, where, why, which and how' : "+text},
+        {"role": "user", "content": "Please help me summarize the article and keep key time and place in your summary' : "+text},
     ]
 
     outputs = pipe1(

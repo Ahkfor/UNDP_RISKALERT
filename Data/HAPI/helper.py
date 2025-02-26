@@ -51,7 +51,7 @@ def construct_url(APP_IDENTIFIER, THEME, LOCATION):
     :return: constructed url as string
     '''
     BASE_URL = (
-        f"https://hapi.humdata.org/api/v1/{THEME}?"
+        f"https://hapi.humdata.org/api/v2/{THEME}?"
         f"output_format=csv"
         f"&location_code={LOCATION}"
         f"&app_identifier={APP_IDENTIFIER}"
@@ -68,7 +68,7 @@ def construct_url_all(APP_IDENTIFIER, THEME):
     :return: constructed url as string
     '''
     BASE_URL = (
-        f"https://hapi.humdata.org/api/v1/{THEME}?"
+        f"https://hapi.humdata.org/api/v2/{THEME}?"
         f"output_format=csv"
         f"&app_identifier={APP_IDENTIFIER}"
     )

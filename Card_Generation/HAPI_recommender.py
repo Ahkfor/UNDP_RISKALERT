@@ -22,7 +22,7 @@ class HAPIRecommender:
     def __init__(self, summary, output_number=None):
         self.summary = summary
         self.correlation_scores = []
-        self.compute_correlations()
+        # self.compute_correlations()
         self.output_number = output_number
     
     def generate_recommendation(self):
