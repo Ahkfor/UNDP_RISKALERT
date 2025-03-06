@@ -4,6 +4,12 @@ import Card_Generation.card_generation as cg
 from Data.RELIEFWEB.reliefweb_class import ReliefWebClass
 from Card_Generation.HAPI_recommender import HAPIRecommender
 from Text_Summary.text_summary import DocumentSummarizer
+from Data.HAPI_visual import HAPIVisualizer
+from huggingface_hub import login
+import matplotlib.pyplot as plt
+
+api_token = "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"
+login(api_token)
 
 
 # Example
@@ -32,3 +38,6 @@ recommended = HAPIRecommender(summary).generate_recommendation()
 
 print(recommended)
 
+graphs = HAPIVisualizer(country, recommended, 3).generate_plots()
+for fig in graphs:
+    plt.show()

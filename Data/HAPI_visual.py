@@ -1,5 +1,5 @@
-import Visualization.visualization as vis
-from HAPI.hapi_class import HapiClass
+from .Visualization import visualization as vis
+from .HAPI.hapi_class import HapiClass
 
 class HAPIVisualizer:
     HAPI_columns = [
@@ -21,6 +21,8 @@ class HAPIVisualizer:
         self.output_number = output_number
         
     def generate_plots(self):
+        counter = 0
+        output = []
         for col in self.columns:
             if col not in self.HAPI_columns:
                 raise ValueError("Invalid Column Name!")
@@ -28,7 +30,7 @@ class HAPIVisualizer:
                 plot = vis.plot_humanitarian_needs(self.country_data)
             
             elif col == "Refugee":
-                pass
+                plot = vis.plot_refugee_data(self.country_data)
             
             elif col == 'Returnee':
                 pass
@@ -52,4 +54,12 @@ class HAPIVisualizer:
                 plot = vis.plot_population(self.country_data)
                 
             elif col == 'Poverty Rate':
-                plot = vis.plot
+                pass
+            
+            if plot:
+                output.append(plot)
+                counter += 1
+            if counter == self.output_number:
+                break    
+                
+        return output

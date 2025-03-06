@@ -73,7 +73,7 @@ class HapiClass:
         Retrieve humanitarian need data from HAPI, and store it in self.refugee_data
         :return: None
         '''
-        base_url = helper.construct_url(HapiClass.APP_IDENTIFIER, 'affected-people/refugees', self.LOCATION)
+        base_url = helper.construct_url(HapiClass.APP_IDENTIFIER, 'affected-people/refugees-persons-of-concern', self.LOCATION)
         results = helper.fetch_data(base_url, HapiClass.LIMIT)
         self.refugee_data = results
 
@@ -107,7 +107,7 @@ class HapiClass:
         Retrieve conflict event data from HAPI
         :return: None
         '''
-        base_url = helper.construct_url(HapiClass.APP_IDENTIFIER, 'coordination-context/conflict-event', self.LOCATION)
+        base_url = helper.construct_url(HapiClass.APP_IDENTIFIER, 'coordination-context/conflict-events', self.LOCATION)
         results = helper.fetch_data(base_url, HapiClass.LIMIT)
         results = results.drop(['location_ref',
                                 'location_name',

@@ -17,12 +17,11 @@ class HAPIRecommender:
         'Population',
         'Poverty Rate'
     ]
-    
+
     
     def __init__(self, summary, output_number=None):
         self.summary = summary
         self.correlation_scores = []
-        # self.compute_correlations()
         self.output_number = output_number
     
     def generate_recommendation(self):
@@ -33,7 +32,7 @@ class HAPIRecommender:
             embeddings = sbert_model.encode([word, article])  # Get embeddings
             return cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]  # Compute similarity
         
-        # Compute correlation scoresvvvvvvvvvvvvnnmcB
+        # Compute correlation scores
         for column in self.HAPI_columns:
             correlation_score = compute_sbert_similarity(column, self.summary)
             self.correlation_scores.append(correlation_score)
