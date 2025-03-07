@@ -46,21 +46,21 @@ class HapiClass:
         '''
         base_url = helper.construct_url(HapiClass.APP_IDENTIFIER, 'affected-people/humanitarian-needs', self.LOCATION)
         results = helper.fetch_data(base_url, HapiClass.LIMIT)
-        # results = pd.read_csv('humanitarian_needs.csv')
-        results = results.drop(['location_ref',
-                                      'location_name',
-                                      'location_code',
-                                      'admin1_is_unspecified',
-                                      'admin2_is_unspecified',
-                                      'admin1_ref',
-                                      'admin2_ref',
-                                      'admin1_code',
-                                      'admin2_code',
-                                      'admin1_name',
-                                      'admin2_name',
-                                      'min_age',
-                                      'max_age',
-                                      'resource_hdx_id'], axis=1)
+        # # results = pd.read_csv('humanitarian_needs.csv')
+        # results = results.drop(['location_ref',
+        #                               'location_name',
+        #                               'location_code',
+        #                               'admin1_is_unspecified',
+        #                               'admin2_is_unspecified',
+        #                               'admin1_ref',
+        #                               'admin2_ref',
+        #                               'admin1_code',
+        #                               'admin2_code',
+        #                               'admin1_name',
+        #                               'admin2_name',
+        #                               'min_age',
+        #                               'max_age',
+        #                               'resource_hdx_id'], axis=1)
 
         # Note for 'population_status' column
         # The PIN should not be summed across sectors or population statuses, as the same people can be present across multiple groups
@@ -109,16 +109,16 @@ class HapiClass:
         '''
         base_url = helper.construct_url(HapiClass.APP_IDENTIFIER, 'coordination-context/conflict-events', self.LOCATION)
         results = helper.fetch_data(base_url, HapiClass.LIMIT)
-        results = results.drop(['location_ref',
-                                'location_name',
-                                'location_code',
-                                'admin1_is_unspecified',
-                                'admin2_is_unspecified',
-                                'admin1_ref',
-                                'admin2_ref',
-                                'admin1_code',
-                                'admin2_code',
-                                'resource_hdx_id'], axis=1)
+        # results = results.drop(['location_ref',
+        #                         'location_name',
+        #                         'location_code',
+        #                         'admin1_is_unspecified',
+        #                         'admin2_is_unspecified',
+        #                         'admin1_ref',
+        #                         'admin2_ref',
+        #                         'admin1_code',
+        #                         'admin2_code',
+        #                         'resource_hdx_id'], axis=1)
 
         self.conflict_event_data = results
 
@@ -139,18 +139,18 @@ class HapiClass:
         """
         base_url = helper.construct_url(HapiClass.APP_IDENTIFIER, 'population-social/population', self.LOCATION)
         results = helper.fetch_data(base_url, HapiClass.LIMIT)
-        results = results.drop(['location_ref',
-                                'location_name',
-                                'location_code',
-                                'admin1_is_unspecified',
-                                'admin2_is_unspecified',
-                                'admin1_ref',
-                                'admin2_ref',
-                                'admin1_code',
-                                'admin2_code',
-                                'admin1_name',
-                                'admin2_name',
-                                'resource_hdx_id'], axis=1)
+        # results = results.drop(['location_ref',
+        #                         'location_name',
+        #                         'location_code',
+        #                         'admin1_is_unspecified',
+        #                         'admin2_is_unspecified',
+        #                         'admin1_ref',
+        #                         'admin2_ref',
+        #                         'admin1_code',
+        #                         'admin2_code',
+        #                         'admin1_name',
+        #                         'admin2_name',
+        #                         'resource_hdx_id'], axis=1)
         self.population_data = results
 
 
@@ -161,11 +161,11 @@ class HapiClass:
         """
         base_url = helper.construct_url(HapiClass.APP_IDENTIFIER, 'coordination-context/funding', self.LOCATION)
         results = helper.fetch_data(base_url, self.LIMIT)
-        results.drop(['resource_hdx_id',
-                      'appeal_code',
-                      'location_ref',
-                      'location_code',
-                      'location_name'], axis=1)
+        # results.drop(['resource_hdx_id',
+        #               'appeal_code',
+        #               'location_ref',
+        #               'location_code',
+        #               'location_name'], axis=1)
         self.funding_data = results
 
 
