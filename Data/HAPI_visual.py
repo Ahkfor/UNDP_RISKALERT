@@ -27,7 +27,8 @@ class HAPIVisualizer:
             if col not in self.HAPI_columns:
                 raise ValueError("Invalid Column Name!")
             if col == 'Humanitarian Need':
-                plot = vis.plot_humanitarian_needs(self.country_data)
+                # plot = vis.plot_humanitarian_needs(self.country_data)
+                pass
             
             elif col == "Refugee":
                 plot = vis.plot_refugee_data(self.country_data)
