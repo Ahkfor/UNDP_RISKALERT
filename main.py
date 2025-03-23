@@ -16,7 +16,7 @@ login(api_token)
 
 # Initialize country
 country = "UKR"
-date_range = ("2022-02-24", "2022-03-24")
+date_range = ("2025-02-21", "2025-03-21")
 
 # country_data = HapiClass(country)
 # plot1 = visual.plot_humanitarian_needs(country_data)
@@ -38,6 +38,6 @@ recommended = HAPIRecommender(summary).generate_recommendation()
 
 print(recommended)
 
-graphs = HAPIVisualizer(country, recommended, 3).generate_plots()
+graphs = HAPIVisualizer(country, recommended, 1).generate_plots()
 for fig in graphs:
     plt.show()

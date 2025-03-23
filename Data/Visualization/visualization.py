@@ -1,5 +1,9 @@
 from .visual_helper import *
 import pandas as pd
+import ox
+import folium
+import json
+import gpd
 
 
 
@@ -175,88 +179,88 @@ def plot_refugee_data(country_data):
 
     return plot
 
-# def plot_humanitarian_needs_geo_plot(country_data):
-#     '''
-#     This function will plot the trend of humanitarian needs for a given country, takes HapiClass object as input.
-#     It also generates a GeoJSON file and a choropleth map based on the humanitarian data.
+def plot_humanitarian_needs_geo_plot(country_data):
+    '''
+    This function will plot the trend of humanitarian needs for a given country, takes HapiClass object as input.
+    It also generates a GeoJSON file and a choropleth map based on the humanitarian data.
 
-#     :param country_data: a HapiClass object
-#     :return: None
-#     '''
+    :param country_data: a HapiClass object
+    :return: None
+    '''
 
-#     # Ensure the object has obtained humanitarian data
-#     if not country_data.humanitarian_data:
-#         country_data.get_humanitarian_needs_data()
+    # Ensure the object has obtained humanitarian data
+    if not country_data.humanitarian_data:
+        country_data.get_humanitarian_needs_data()
 
-#     df = country_data.humanitarian_data
+    df = country_data.humanitarian_data
 
-#     # Filter for Intersectoral data and population in need
-#     intersector_df = df[(df['sector_name'] == 'Intersectoral') &
-#                         (df['population_status'] == 'INN') &
-#                         (df['population_group'] == 'all') &
-#                         (df['age_range'] == 'ALL') &
-#                         (df['disabled_marker'] == 'all')]
+    # Filter for Intersectoral data and population in need
+    intersector_df = df[(df['sector_name'] == 'Intersectoral') &
+                        (df['population_status'] == 'INN') &
+                        (df['population_group'] == 'all') &
+                        (df['age_range'] == 'ALL') &
+                        (df['disabled_marker'] == 'all')]
 
-#     # Group data by admin1_name and admin2_name
-#     grouped_df = intersector_df.groupby(['admin1_name', 'admin2_name']).size().reset_index(name='count')
+    # Group data by admin1_name and admin2_name
+    grouped_df = intersector_df.groupby(['admin1_name', 'admin2_name']).size().reset_index(name='count')
 
-#     # Function to get geometry for a region
-#     def get_region_geometry(region_name, admin1_name):
-#         try:
-#             query = f"{region_name}, {admin1_name}, {country_data.LOCATION}"
-#             gdf = ox.geocode_to_gdf(query)
-#             return gdf['geometry'].iloc[0]
-#         except Exception as e:
-#             print(f"Failed to get geometry for {region_name}: {e}")
-#             return None
+    # Function to get geometry for a region
+    def get_region_geometry(region_name, admin1_name):
+        try:
+            query = f"{region_name}, {admin1_name}, {country_data.LOCATION}"
+            gdf = ox.geocode_to_gdf(query)
+            return gdf['geometry'].iloc[0]
+        except Exception as e:
+            print(f"Failed to get geometry for {region_name}: {e}")
+            return None
 
-#     # Create an empty GeoDataFrame to store results
-#     results_gdf = gpd.GeoDataFrame(columns=['admin1_name', 'admin2_name', 'count', 'geometry'])
+    # Create an empty GeoDataFrame to store results
+    results_gdf = gpd.GeoDataFrame(columns=['admin1_name', 'admin2_name', 'count', 'geometry'])
 
-#     # Iterate through grouped_df to get geometry for each region
-#     for index, row in grouped_df.iterrows():
-#         admin1_name = row['admin1_name']
-#         admin2_name = row['admin2_name']
-#         count = row['count']
+    # Iterate through grouped_df to get geometry for each region
+    for index, row in grouped_df.iterrows():
+        admin1_name = row['admin1_name']
+        admin2_name = row['admin2_name']
+        count = row['count']
 
-#         geometry = get_region_geometry(admin2_name, admin1_name)
-#         if geometry is not None:
-#             new_row = gpd.GeoDataFrame({
-#                 'admin1_name': [admin1_name],
-#                 'admin2_name': [admin2_name],
-#                 'count': [count],
-#                 'geometry': [geometry]
-#             })
-#             results_gdf = pd.concat([results_gdf, new_row], ignore_index=True)
+        geometry = get_region_geometry(admin2_name, admin1_name)
+        if geometry is not None:
+            new_row = gpd.GeoDataFrame({
+                'admin1_name': [admin1_name],
+                'admin2_name': [admin2_name],
+                'count': [count],
+                'geometry': [geometry]
+            })
+            results_gdf = pd.concat([results_gdf, new_row], ignore_index=True)
 
-#     # Convert GeoDataFrame to GeoJSON
-#     geojson = json.loads(results_gdf.to_json())
+    # Convert GeoDataFrame to GeoJSON
+    geojson = json.loads(results_gdf.to_json())
 
-#     # Save as GeoJSON file
-#     with open("regions.geojson", "w") as f:
-#         json.dump(geojson, f, indent=4)
+    # Save as GeoJSON file
+    with open("regions.geojson", "w") as f:
+        json.dump(geojson, f, indent=4)
 
-#     print("GeoJSON file generated: regions.geojson")
+    print("GeoJSON file generated: regions.geojson")
 
-#     # Define the map center (default to Kabul's coordinates)
-#     kabul_center = [34.5553, 69.2075]  # [latitude, longitude]
+    # Define the map center (default to Kabul's coordinates)
+    kabul_center = [34.5553, 69.2075]  # [latitude, longitude]
 
-#     # Create the map
-#     m = folium.Map(location=kabul_center, zoom_start=10)
+    # Create the map
+    m = folium.Map(location=kabul_center, zoom_start=10)
 
-#     # Generate Choropleth map
-#     folium.Choropleth(
-#         geo_data="regions.geojson",
-#         data=grouped_df,
-#         name="Districts Statistics",
-#         columns=["admin2_name", "count"],
-#         key_on="feature.properties.admin2_name",
-#         fill_color="YlOrRd",
-#         fill_opacity=0.7,
-#         line_opacity=0.8,
-#         legend_name="Population in Need"
-#     ).add_to(m)
+    # Generate Choropleth map
+    folium.Choropleth(
+        geo_data="regions.geojson",
+        data=grouped_df,
+        name="Districts Statistics",
+        columns=["admin2_name", "count"],
+        key_on="feature.properties.admin2_name",
+        fill_color="YlOrRd",
+        fill_opacity=0.7,
+        line_opacity=0.8,
+        legend_name="Population in Need"
+    ).add_to(m)
 
-#     # Save the map
-#     m.save("choropleth_map.html")
-#     print("✅ Map generated, please open 'choropleth_map.html' to view")
+    # Save the map
+    m.save("choropleth_map.html")
+    print("✅ Map generated, please open 'choropleth_map.html' to view")
