@@ -49,7 +49,8 @@ class ReliefWebClass:
             try:
                 url = row['href']
                 text = read_report(url)
-                articles.append(text)
+                title = row['fields_title']
+                articles.append({'title': title, 'body': text})
             except Exception as e:
                 print(f"Failed to save report {row['fields_title']}: {e}")
         return articles

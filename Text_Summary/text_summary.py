@@ -6,20 +6,21 @@ from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.text_rank import TextRankSummarizer
 from .helper import *
 import concurrent.futures
-
+from huggingface_hub import login
 
 class DocumentSummarizer:
     """
     This class summarizes a series of related documents
     """
     
-    def __init__(self, document_li=None):
+    def __init__(self, retriver_li = None,document_li = None):
         """
         Initialize by inputing a list of documents
 
         Args:
             document_li (list): a list of strings (reports). Defaults to None.
         """
+        self.retriver = retriver_li
         self.documents = document_li
         self.summary = None
 
@@ -96,12 +97,21 @@ class DocumentSummarizer:
 
         return result
 
-    def llama_summary(self):
+    def llama_summary(self,query,top_k):
         summary = ''
-
-        for doc in self.documents:
-            summary = summary + text_summary_bart(doc, max_len=300)
-        result = text_summary_llama(summary, max_len=500)
+        retrived_docs = self.retriver.search(query,top_k)
+        print("Get docs successfully")
+        for i,doc in enumerate(retrived_docs):
+            summary = summary + text_summary_bart(doc, max_len=250)
+            print(f'summary completed for text {i}')
+        print(summary)
+        result = text_summary_llama(summary, max_len=2000)
         return result
-
+    
+    def distill_summary(self):
+        summary = ''
+        for doc in self.documents:
+            summary = summary + text_summary_bart(doc,max_len=300)
+        result = text_summary_deepseekllama(summary,max_len=1000)
+        return result
         

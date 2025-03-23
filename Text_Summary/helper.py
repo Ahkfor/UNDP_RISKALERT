@@ -1,5 +1,9 @@
+import os
 import torch
 import re
+import faiss
+import numpy as np
+from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM, GenerationConfig
 from transformers import pipeline
 
@@ -105,6 +109,36 @@ def text_summary_llama(text, max_len = 150):
     )
 
     messages = [
+        {"role": "system", "content": "You are a professional research assistant tasked with summarizing national events in a \
+         formal, structured, and objective manner. Your summaries should resemble a research report, with clear sections \
+         and a focus on key details."},
+        {"role": "user", "content": "Please summarize the following article in the style of a research report. Ensure the summary includes the following elements:\n"
+                   "1. **Background**: Briefly describe the context or significance of the event.\n"
+                   "2. **Key Events**: Highlight the main events, including specific times and locations.\n"
+                   "3. **Impact or Consequences**: Discuss the potential or actual impact of the event.\n"
+                   "4. **Conclusion**: Provide a concise conclusion summarizing the event's importance.\n"
+                   "Maintain a formal and professional tone throughout. Here is the article: " + text},
+    ]
+
+    outputs = pipe1(
+        messages,
+        max_new_tokens=max_len,
+    )
+
+    result = outputs[0]["generated_text"][-1]
+    return result.get('content')
+
+def text_summary_deepseekllama(text, max_len = 150):
+    model_id = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
+
+    pipe1 = pipeline(
+        "text-generation",
+        model=model_id,
+        model_kwargs={"torch_dtype": torch.bfloat16},
+        device_map="auto",
+    )
+
+    messages = [
         {"role": "system", "content": "You are a professional chatbot who writes reports about national events."},
         {"role": "user", "content": "Please help me summarize the article and keep key time and place in your summary' : "+text},
     ]
@@ -116,6 +150,70 @@ def text_summary_llama(text, max_len = 150):
 
     result = outputs[0]["generated_text"][-1]
     return result.get('content')
+
+# FAISS-based text retrieval
+class TextRetriever:
+    def __init__(self, folder_path, index_path="faiss_index_cosine.bin", filenames_path="filenames.npy"):
+        self.folder_path = folder_path
+        self.index_path = index_path
+        self.filenames_path = filenames_path
+        self.model = SentenceTransformer("all-MiniLM-L6-v2")
+        
+        # Check if index exists, otherwise build it
+        if not os.path.exists(index_path) or not os.path.exists(filenames_path):
+            print("Index not found. Building vector database...")
+            self.build_vector_base()
+
+        # Load FAISS index and filenames
+        self.index = faiss.read_index(self.index_path)
+        self.filenames = np.load(self.filenames_path)
+
+    def build_vector_base(self):
+        """Reads text files, encodes them, and builds a FAISS index."""
+        documents = []
+        filenames = []
+
+        # Read text files from the folder
+        for filename in os.listdir(self.folder_path):
+            if filename.endswith(".txt"):
+                file_path = os.path.join(self.folder_path, filename)
+                with open(file_path, "r", encoding="utf-8") as file:
+                    text = file.read().strip()
+                    documents.append(text)
+                    filenames.append(filename)
+
+        # Convert documents to embeddings
+        embeddings = self.model.encode(documents, convert_to_numpy=True)
+        embeddings = embeddings / np.linalg.norm(embeddings, axis=1, keepdims=True)  # Normalize for cosine similarity
+
+        # Create FAISS index
+        dimension = embeddings.shape[1]
+        index = faiss.IndexFlatIP(dimension)  # Inner Product for cosine similarity
+        index.add(embeddings)
+
+        # Save index and filenames
+        faiss.write_index(index, self.index_path)
+        np.save(self.filenames_path, np.array(filenames))
+        print("Vector database built successfully!")
+
+    def search(self, query, top_k=5):
+        """Retrieve the top_k most relevant text documents for the query."""
+        query_embedding = self.model.encode([query], convert_to_numpy=True)
+        query_embedding = query_embedding / np.linalg.norm(query_embedding, axis=1, keepdims=True)  # Normalize
+
+        # FAISS Search
+        scores, indices = self.index.search(query_embedding, top_k)
+        print(indices)
+        retrieved_docs = []
+        for idx in indices[0]:
+            file_path = os.path.join(self.folder_path, self.filenames[idx])
+            print(self.filenames[idx])
+            with open(file_path, "r", encoding="utf-8") as file:
+                retrieved_docs.append(file.read().strip())
+        return retrieved_docs
+
+
+
 
 # def text_summary_bert(text, max_len=150):
 #     """
