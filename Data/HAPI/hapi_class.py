@@ -1,5 +1,6 @@
 from . import helper
 import pandas as pd
+import pycountry
 
 
 class HapiClass:
@@ -9,11 +10,15 @@ class HapiClass:
     LIMIT = 1000
     APP_IDENTIFIER = "U2ltb24gV2FuZzpzaHVyZW4wNDE5QDE2My5jb20="
 
-    def __init__(self, location):
+    def __init__(self, location, country_name=None):
         '''
         :param location: Should be a specified Country, a capital string of length 3
         '''
         self.LOCATION = location
+        if country_name:
+            self.country_name = country_name
+        else:
+            self.country_name = pycountry.countries.get(alpha_3=self.LOCATION).name
 
         # Store data sets
         self.humanitarian_data = None
@@ -27,7 +32,7 @@ class HapiClass:
         self.coping_capacity_risk = None
         self.overall_risk = None
         self.hazard_exposure_risk = None
-        self.get_national_risk_data()
+        # self.get_national_risk_data()
 
         # Poverty Rate (Only 2010 and 2015, hard to use)
         self.poverty_rate_data = None
@@ -75,6 +80,7 @@ class HapiClass:
         '''
         base_url = helper.construct_url(HapiClass.APP_IDENTIFIER, 'affected-people/refugees-persons-of-concern', self.LOCATION)
         results = helper.fetch_data(base_url, HapiClass.LIMIT)
+        print("Retrieves Refugee Data")
         self.refugee_data = results
 
     def get_national_risk_data(self):
