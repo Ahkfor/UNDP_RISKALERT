@@ -1,9 +1,12 @@
+from tokenize import group
+
 from .visual_helper import *
 import pandas as pd
-import ox
+import osmnx as ox
 import folium
 import json
-import gpd
+import geopandas as gpd
+from geopy.geocoders import Nominatim
 
 
 
@@ -52,6 +55,9 @@ def plot_conflict_events(country_data, event_type='all'):
     df['reference_period_start'] = pd.to_datetime(df['reference_period_start'])
     df['year'] = df['reference_period_start'].dt.year
 
+    latest_year = df['year'].max()
+    df = df[df['year'] >= latest_year - 10]
+
     # Plot
     if event_type == 'all':
         # Create bar and line plot
@@ -63,7 +69,8 @@ def plot_conflict_events(country_data, event_type='all'):
         x = casualties_per_year['year']
         y = casualties_per_year['fatalities']
         plot = line_bar_plot(x, y, title='Conflict Events Fatalities Trend', y_label='Fatalities Count')
-    return plot
+        return plot
+    return None
 
 
 def plot_funding(country_data):
@@ -139,7 +146,7 @@ def plot_events(country_data):
 
     # Call bar_chart for visualization
     plot = bar_chart(aggregated_data,
-                                   title="Conflict Events Over Years in AFG",
+                                   title=f"Conflict Events Over Years in {country_data.country_name}",
                                    x_label="Year",
                                    y_label="Number of Events",
                                    save_path='./conflict_events2',
@@ -159,14 +166,14 @@ def plot_refugee_data(country_data):
     refugee_data['reference_period_start'] = pd.to_datetime(refugee_data['reference_period_start'], errors='coerce')
 
     # Filter refugees based on the location
-    refugees = refugee_data[refugee_data['origin_location_code'] == country_data.LOCATION]
-    print(refugees.head(5))
+    # refugees = refugee_data[refugee_data['origin_location_code'] == country_data.LOCATION]
+    refugee_data.to_csv('refugee_data.csv')
 
     # Extract the year from reference_period_start
-    refugees['Year'] = refugees['reference_period_start'].dt.year
+    refugee_data['Year'] = refugee_data['reference_period_start'].dt.year
 
     # Group by Year and sum the population for each year
-    yearly_trends = refugees.groupby(['Year'])['population'].sum().reset_index()
+    yearly_trends = refugee_data.groupby(['Year'])['population'].sum().reset_index()
 
     plot = line_bar_plot(
         x=yearly_trends['Year'],
@@ -179,9 +186,10 @@ def plot_refugee_data(country_data):
 
     return plot
 
+
 def plot_humanitarian_needs_geo_plot(country_data):
     '''
-    This function will plot the trend of humanitarian needs for a given country, takes HapiClass object as input.
+    This function will plot the trend of humanitarian needs for a given country, taking a HapiClass object as input.
     It also generates a GeoJSON file and a choropleth map based on the humanitarian data.
 
     :param country_data: a HapiClass object
@@ -195,71 +203,75 @@ def plot_humanitarian_needs_geo_plot(country_data):
     df = country_data.humanitarian_data
 
     # Filter for Intersectoral data and population in need
-    intersector_df = df[(df['sector_name'] == 'Intersectoral') &
-                        (df['population_status'] == 'INN') &
-                        (df['population_group'] == 'all') &
-                        (df['age_range'] == 'ALL') &
-                        (df['disabled_marker'] == 'all')]
+    intersector_df = df[(df['sector_name'] == 'Intersectoral') & (df['population_status'] == 'all')]
+    intersector_df.to_csv('data.csv')
 
     # Group data by admin1_name and admin2_name
-    grouped_df = intersector_df.groupby(['admin1_name', 'admin2_name']).size().reset_index(name='count')
+    grouped_df = intersector_df.groupby(['admin1_name'])['population'].sum().reset_index(name='population')
 
     # Function to get geometry for a region
-    def get_region_geometry(region_name, admin1_name):
+    def get_region_geometry(admin1_name):
         try:
-            query = f"{region_name}, {admin1_name}, {country_data.LOCATION}"
+            query = f"{admin1_name}, {country_data.country_name}"
             gdf = ox.geocode_to_gdf(query)
-            return gdf['geometry'].iloc[0]
+            if not gdf.empty:
+                return gdf['geometry'].iloc[0]
         except Exception as e:
-            print(f"Failed to get geometry for {region_name}: {e}")
-            return None
+            print(f"Failed to get geometry for {admin1_name}: {e}")
+        return None
 
-    # Create an empty GeoDataFrame to store results
-    results_gdf = gpd.GeoDataFrame(columns=['admin1_name', 'admin2_name', 'count', 'geometry'])
+    # Store results in a list instead of inefficiently concatenating GeoDataFrames
+    results = []
 
     # Iterate through grouped_df to get geometry for each region
-    for index, row in grouped_df.iterrows():
-        admin1_name = row['admin1_name']
-        admin2_name = row['admin2_name']
-        count = row['count']
+    for _, row in grouped_df.iterrows():
+        admin1_name, count = row['admin1_name'], row['population']
+        geometry = get_region_geometry(admin1_name)
 
-        geometry = get_region_geometry(admin2_name, admin1_name)
         if geometry is not None:
-            new_row = gpd.GeoDataFrame({
-                'admin1_name': [admin1_name],
-                'admin2_name': [admin2_name],
-                'count': [count],
-                'geometry': [geometry]
-            })
-            results_gdf = pd.concat([results_gdf, new_row], ignore_index=True)
+            results.append(
+                {'admin1_name': admin1_name, 'count': count, 'geometry': geometry})
+
+    # Convert list to GeoDataFrame
+    if results:
+        results_gdf = gpd.GeoDataFrame(results, crs="EPSG:4326")
+    else:
+        print("No valid geographic data found. Exiting function.")
+        return
 
     # Convert GeoDataFrame to GeoJSON
-    geojson = json.loads(results_gdf.to_json())
+    geojson_data = json.loads(results_gdf.to_json())
 
     # Save as GeoJSON file
     with open("regions.geojson", "w") as f:
-        json.dump(geojson, f, indent=4)
+        json.dump(geojson_data, f, indent=4)
 
-    print("GeoJSON file generated: regions.geojson")
+    print("✅ GeoJSON file generated: regions.geojson")
 
     # Define the map center (default to Kabul's coordinates)
-    kabul_center = [34.5553, 69.2075]  # [latitude, longitude]
+    geolocator = Nominatim(user_agent="geo_center_finder")
+    location = geolocator.geocode(country_data.country_name)
+    if location:
+        map_center = [location.latitude, location.longitude]  # [latitude, longitude]
+    else:
+        map_center = [0, 0]
 
     # Create the map
-    m = folium.Map(location=kabul_center, zoom_start=10)
+    m = folium.Map(location=map_center, zoom_start=6)
 
     # Generate Choropleth map
-    folium.Choropleth(
-        geo_data="regions.geojson",
+    choropleth = folium.Choropleth(
+        geo_data=geojson_data,
         data=grouped_df,
         name="Districts Statistics",
-        columns=["admin2_name", "count"],
-        key_on="feature.properties.admin2_name",
+        columns=["admin1_name", "population"],
+        key_on="feature.properties.admin1_name",
         fill_color="YlOrRd",
         fill_opacity=0.7,
         line_opacity=0.8,
         legend_name="Population in Need"
-    ).add_to(m)
+    )
+    choropleth.add_to(m)
 
     # Save the map
     m.save("choropleth_map.html")
