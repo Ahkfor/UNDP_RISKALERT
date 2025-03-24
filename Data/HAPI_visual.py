@@ -52,8 +52,8 @@ class HAPIVisualizer:
                 pass
             
             elif col == 'Population':
-                plot = vis.plot_population(self.country_data)
-                
+                # plot = vis.plot_population(self.country_data)
+                pass
             elif col == 'Poverty Rate':
                 pass
             
